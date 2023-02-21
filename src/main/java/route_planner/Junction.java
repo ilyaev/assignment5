@@ -125,6 +125,21 @@ public class Junction implements graphs.Identifiable
         return name;
     }
 
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Junction))
+            return false;
+        Junction other = (Junction) o;
+        return name.equals(other.name);
+    }
+
     // TODO more implementations as required for use with DirectedGraph, HashSet
     // and/or HashMap
 

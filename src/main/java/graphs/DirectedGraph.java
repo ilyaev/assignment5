@@ -133,6 +133,8 @@ public class DirectedGraph<V extends Identifiable, E> {
         // TODO add (directed) newEdge to the graph between fromVertex and toVertex
 
         Map<V, E> edge;
+        addOrGetVertex(fromVertex);
+        addOrGetVertex(toVertex);
         if (edges.containsKey(fromVertex)) {
             edge = edges.get(fromVertex);
         } else {
@@ -140,7 +142,10 @@ public class DirectedGraph<V extends Identifiable, E> {
             edges.put(fromVertex, edge);
         }
 
-        edge.put(toVertex, newEdge);
+        if (!edge.containsKey(toVertex)) {
+            edge.put(toVertex, newEdge);
+            return true;
+        }
         return false;
     }
 
@@ -160,9 +165,11 @@ public class DirectedGraph<V extends Identifiable, E> {
         V fromVertex = getVertexById(fromId);
         V toVertex = getVertexById(toId);
 
-        addEdge(fromVertex, toVertex, newEdge);
+        if (fromVertex == null || toVertex == null) {
+            return false;
+        }
 
-        return false;
+        return addEdge(fromVertex, toVertex, newEdge);
     }
 
     /**
@@ -342,7 +349,7 @@ public class DirectedGraph<V extends Identifiable, E> {
 
         dfs(start, target, path);
 
-        return path;
+        return path.vertices.size() > 0 ? path : null;
     }
 
     /**
@@ -402,7 +409,7 @@ public class DirectedGraph<V extends Identifiable, E> {
 
         // TODO calculate the path from start to target by breadth-first-search
 
-        return path;
+        return path.vertices.size() > 0 ? path : null;
     }
 
     // helper class to register the state of a vertex in dijkstra shortest path

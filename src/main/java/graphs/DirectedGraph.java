@@ -4,6 +4,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import route_planner.Road;
+import route_planner.Junction;
+
 public class DirectedGraph<V extends Identifiable, E> {
 
     private final Map<String, V> vertices = new HashMap<>();
@@ -425,6 +428,19 @@ public class DirectedGraph<V extends Identifiable, E> {
         }
     }
 
+    public DSPNode nodeWithShortestDistance(Map<V, DSPNode> nodes) {
+        double maxWeight = Integer.MAX_VALUE;
+        DSPNode result = null;
+        for (V vertex : nodes.keySet()) {
+            DSPNode node = nodes.get(vertex);
+            if (node.weightSumTo < maxWeight && !node.marked) {
+                maxWeight = node.weightSumTo;
+                result = node;
+            }
+        }
+        return result;
+    }
+
     /**
      * Calculates the edge-weighted shortest path from start to target
      * according to Dijkstra's algorithm of a minimum spanning tree
@@ -467,18 +483,58 @@ public class DirectedGraph<V extends Identifiable, E> {
         progressData.put(start, nextDspNode);
 
         while (nextDspNode != null) {
+            nextDspNode.marked = true;
+            path.visited.add(nextDspNode.vertex);
 
-            // TODO continue Dijkstra's algorithm to process nextDspNode
-            // mark nodes as you complete their processing
-            // register all visited vertices while going for statistical purposes
-            // if you hit the target: complete the path and bail out !!!
+            if (nextDspNode.vertex.equals(target)) {
+                break;
+            }
 
-            // TODO find the next nearest node that is not marked yet
+            for (V vertex : edges.get(nextDspNode.vertex).keySet()) {
+                DSPNode node = progressData.get(vertex);
+                if (node == null) {
+                    node = new DSPNode(vertex);
+                    node.weightSumTo = Double.MAX_VALUE;
+                    progressData.put(vertex, node);
+                }
+                if (!node.marked) {
+                    double newDistance = nextDspNode.weightSumTo
+                            + weightMapper.apply(getEdge(vertex, nextDspNode.vertex));
+                    if (newDistance < node.weightSumTo) {
+                        node.weightSumTo = newDistance;
+                        node.fromVertex = nextDspNode.vertex;
+                    }
+                }
+            }
+            // // TODO continue Dijkstra's algorithm to process nextDspNode
+            // // mark nodes as you complete their processing
+            // // register all visited vertices while going for statistical purposes
+            // // if you hit the target: complete the path and bail out !!!
 
+            // // TODO find the next nearest node that is not marked yet
+            nextDspNode = nodeWithShortestDistance(progressData);
         }
 
-        // no path found, graph was not connected ???
-        return null;
+        DSPNode prevNode = progressData.get(target);
+
+        if (prevNode == null) {
+            // no path found, graph was not connected ???
+            return null;
+        }
+
+        path.totalWeight = prevNode.weightSumTo;
+
+        while (prevNode.fromVertex != null) {
+            path.vertices.push(prevNode.vertex);
+            prevNode = progressData.get(prevNode.fromVertex);
+            if (prevNode == null) {
+                break;
+            }
+        }
+
+        path.vertices.push(start);
+
+        return path;
     }
 
     @Override

@@ -4,9 +4,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import route_planner.Road;
-import route_planner.Junction;
-
 public class DirectedGraph<V extends Identifiable, E> {
 
     private final Map<String, V> vertices = new HashMap<>();
@@ -85,10 +82,15 @@ public class DirectedGraph<V extends Identifiable, E> {
         if (fromVertex == null)
             return null;
 
+        Map<V, E> items = edges.get(fromVertex);
+        if (items.size() > 0) {
+            return items.values();
+        }
+
+        return List.of();
+
         // TODO retrieve the collection of out-going edges which connect fromVertex with
         // a neighbour in the edges data structure
-
-        return null;
     }
 
     public Collection<E> getEdges(String fromId) {
